@@ -1,5 +1,5 @@
 {
-  "name": "orbis-hackathon-starter",
+  "name": "proofgarden-orbis",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -23,5 +23,6 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "typescript": "^5.9.3"
-  }
+  },
+  "description": "A living onchain identity garden powered by Orbis"
 }
