@@ -114,14 +114,22 @@ function OrbisStudio({ prompt, onClose }: { prompt: string; onClose: () => void 
   return <div className="studio-overlay"><div className="studio-modal"><button className="studio-close" onClick={onClose}>Close ×</button><ReactorProvider apiUrl="https://api.reactor.inc" modelName={ORBIS_MODEL_NAME} modelTracks={[...ORBIS_TRACKS]} connectOptions={{ autoConnect: false }} jwtToken={getJwt}><StudioSession clearJwt={clearJwt} getCurrentJwt={getCurrentJwt} initialPrompt={prompt} /></ReactorProvider></div></div>;
 }
 
-function StudioSession({ clearJwt, getCurrentJwt, initialPrompt }: { clearJwt: () => void; getCurrentJwt: () => string | null; initialPrompt: string }) {
+function StudioSession({ clearJwt, getCurrentJwt, initialPrompt }: {
+  clearJwt: () => void;
+  getCurrentJwt: () => string | null;
+  initialPrompt: string;
+}) {
   const session = useOrbisSession(clearJwt, getCurrentJwt);
-  const initialized = useRef(false);
+  const lastPrompt = useRef("");
+
   useEffect(() => {
-    if (!initialized.current) {
+    if (!initialPrompt.trim()) return;
+
+    if (lastPrompt.current !== initialPrompt) {
       session.setPrompt(initialPrompt);
-      initialized.current = true;
+      lastPrompt.current = initialPrompt;
     }
   }, [initialPrompt, session]);
+
   return <><div className="studio-heading"><span>PROOFGARDEN / ORBIS</span><h3>World Engine</h3></div><div className="session-grid"><OrbisPlayer connected={session.connected} muted={session.muted} runStarted={session.runStarted} status={session.status} /><OrbisControls session={session} /></div></>;
 }
