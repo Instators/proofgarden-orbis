@@ -82,9 +82,41 @@ export function ProofGardenApp() {
         </div>
       </section>
 
-      <section className="orbis-section">
-        <div className="orbis-intro"><p className="section-number">03 / ORBIS WORLD ENGINE</p><h2>Turn the specimen<br />into a living world.</h2><p>The garden state becomes a grounded visual prompt. Connect to Orbis, start the world, then steer it while it runs.</p><button className="primary-link button-link" onClick={() => setStudioOpen(true)}>Open world engine <span>↗</span></button></div>
-        <div className="orbis-visual"><div className="world-window"><GardenCanvas vitality={Math.min(100, wallet.vitality + 18)} active seed={seed + 9} /><div className="world-caption">ORGANIC STATE / CONTINUOUS</div></div></div>
+      <section className="orbis-section" id="orbis">
+        <div className="orbis-intro">
+          <p className="section-number">03 / ORBIS WORLD ENGINE</p>
+          <h2>Turn the specimen<br />into a living world.</h2>
+          <p>The garden state becomes a grounded visual prompt. Connect to Orbis, start the world, then steer it while it runs.</p>
+
+          <div className="engine-callout">
+            <span className="engine-callout-label">AI WORLD GENERATION</span>
+            <strong>Ready to bring your garden to life?</strong>
+            <p>Launch the live Orbis + Reactor experience and generate the moving world.</p>
+            <button
+              className="engine-launch-button"
+              onClick={() => setStudioOpen(true)}
+              type="button"
+            >
+              <span className="engine-launch-icon">▶</span>
+              <span>
+                <small>LAUNCH EXPERIENCE</small>
+                OPEN WORLD ENGINE
+              </span>
+              <b>→</b>
+            </button>
+          </div>
+        </div>
+
+        <div className="orbis-visual">
+          <div className="world-window">
+            <GardenCanvas
+              vitality={Math.min(100, wallet.vitality + 18)}
+              active
+              seed={seed + 9}
+            />
+            <div className="world-caption">ORGANIC STATE / CONTINUOUS</div>
+          </div>
+        </div>
       </section>
 
       <section className="roots" id="about">
@@ -111,32 +143,25 @@ function OrbisStudio({ prompt, onClose }: { prompt: string; onClose: () => void 
   }, []);
   const getCurrentJwt = useCallback(() => currentJwt.current, []);
   const clearJwt = useCallback(() => { jwtPromise.current = null; currentJwt.current = null; }, []);
-  return <div className="studio-overlay"><div className="studio-modal"><ReactorProvider apiUrl="https://api.reactor.inc" modelName={ORBIS_MODEL_NAME} modelTracks={[...ORBIS_TRACKS]} connectOptions={{ autoConnect: false }} jwtToken={getJwt}><StudioSession clearJwt={clearJwt} getCurrentJwt={getCurrentJwt} initialPrompt={prompt} onClose={onClose} /></ReactorProvider></div></div>;
+  return <div className="studio-overlay"><div className="studio-modal"><button className="studio-close" onClick={onClose}>Close ×</button><ReactorProvider apiUrl="https://api.reactor.inc" modelName={ORBIS_MODEL_NAME} modelTracks={[...ORBIS_TRACKS]} connectOptions={{ autoConnect: false }} jwtToken={getJwt}><StudioSession clearJwt={clearJwt} getCurrentJwt={getCurrentJwt} initialPrompt={prompt} /></ReactorProvider></div></div>;
 }
 
-function StudioSession({ clearJwt, getCurrentJwt, initialPrompt, onClose }: {
+function StudioSession({ clearJwt, getCurrentJwt, initialPrompt }: {
   clearJwt: () => void;
   getCurrentJwt: () => string | null;
   initialPrompt: string;
-  onClose: () => void;
 }) {
   const session = useOrbisSession(clearJwt, getCurrentJwt);
   const lastPrompt = useRef("");
-  const setPrompt = session.setPrompt;
 
   useEffect(() => {
     if (!initialPrompt.trim()) return;
 
     if (lastPrompt.current !== initialPrompt) {
-      setPrompt(initialPrompt);
+      session.setPrompt(initialPrompt);
       lastPrompt.current = initialPrompt;
     }
-  }, [initialPrompt, setPrompt]);
+  }, [initialPrompt, session]);
 
-  const closeStudio = async () => {
-    if (session.status !== "disconnected") await session.disconnectSession();
-    onClose();
-  };
-
-  return <><button className="studio-close" onClick={() => void closeStudio()} disabled={session.controlsBusy}>Close ×</button><div className="studio-heading"><span>PROOFGARDEN / ORBIS</span><h3>World Engine</h3></div><div className="session-grid"><OrbisPlayer connected={session.connected} muted={session.muted} runStarted={session.runStarted} status={session.status} /><OrbisControls session={session} /></div></>;
+  return <><div className="studio-heading"><span>PROOFGARDEN / ORBIS</span><h3>World Engine</h3></div><div className="session-grid"><OrbisPlayer connected={session.connected} muted={session.muted} runStarted={session.runStarted} status={session.status} /><OrbisControls session={session} /></div></>;
 }
