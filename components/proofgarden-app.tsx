@@ -111,25 +111,32 @@ function OrbisStudio({ prompt, onClose }: { prompt: string; onClose: () => void 
   }, []);
   const getCurrentJwt = useCallback(() => currentJwt.current, []);
   const clearJwt = useCallback(() => { jwtPromise.current = null; currentJwt.current = null; }, []);
-  return <div className="studio-overlay"><div className="studio-modal"><button className="studio-close" onClick={onClose}>Close ×</button><ReactorProvider apiUrl="https://api.reactor.inc" modelName={ORBIS_MODEL_NAME} modelTracks={[...ORBIS_TRACKS]} connectOptions={{ autoConnect: false }} jwtToken={getJwt}><StudioSession clearJwt={clearJwt} getCurrentJwt={getCurrentJwt} initialPrompt={prompt} /></ReactorProvider></div></div>;
+  return <div className="studio-overlay"><div className="studio-modal"><ReactorProvider apiUrl="https://api.reactor.inc" modelName={ORBIS_MODEL_NAME} modelTracks={[...ORBIS_TRACKS]} connectOptions={{ autoConnect: false }} jwtToken={getJwt}><StudioSession clearJwt={clearJwt} getCurrentJwt={getCurrentJwt} initialPrompt={prompt} onClose={onClose} /></ReactorProvider></div></div>;
 }
 
-function StudioSession({ clearJwt, getCurrentJwt, initialPrompt }: {
+function StudioSession({ clearJwt, getCurrentJwt, initialPrompt, onClose }: {
   clearJwt: () => void;
   getCurrentJwt: () => string | null;
   initialPrompt: string;
+  onClose: () => void;
 }) {
   const session = useOrbisSession(clearJwt, getCurrentJwt);
   const lastPrompt = useRef("");
+  const setPrompt = session.setPrompt;
 
   useEffect(() => {
     if (!initialPrompt.trim()) return;
 
     if (lastPrompt.current !== initialPrompt) {
-      session.setPrompt(initialPrompt);
+      setPrompt(initialPrompt);
       lastPrompt.current = initialPrompt;
     }
-  }, [initialPrompt, session]);
+  }, [initialPrompt, setPrompt]);
 
-  return <><div className="studio-heading"><span>PROOFGARDEN / ORBIS</span><h3>World Engine</h3></div><div className="session-grid"><OrbisPlayer connected={session.connected} muted={session.muted} runStarted={session.runStarted} status={session.status} /><OrbisControls session={session} /></div></>;
+  const closeStudio = async () => {
+    if (session.status !== "disconnected") await session.disconnectSession();
+    onClose();
+  };
+
+  return <><button className="studio-close" onClick={() => void closeStudio()} disabled={session.controlsBusy}>Close ×</button><div className="studio-heading"><span>PROOFGARDEN / ORBIS</span><h3>World Engine</h3></div><div className="session-grid"><OrbisPlayer connected={session.connected} muted={session.muted} runStarted={session.runStarted} status={session.status} /><OrbisControls session={session} /></div></>;
 }
